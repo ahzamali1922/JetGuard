@@ -1,0 +1,19 @@
+
+# Data Processing
+numpy>=1.26,<3.0
+pandas>=2.2,<4.0
+scipy>=1.13,<2.0
+
+# Machine Learning
+scikit-learn>=1.5,<2.0
+
+# Data Visualization
+matplotlib>=3.9,<4.0
+seaborn>=0.13,<1.0
+
+# Jupyter Environment
+jupyterlab>=4.2,<5.0
+ipykernel>=6.29,<7.0
+
+# Utilities
+tqdm>=4.66,<5.0
