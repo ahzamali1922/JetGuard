@@ -38,6 +38,26 @@ Training data contains run-to-failure sequences, while test data contains trunca
 - PyTorch / TensorFlow
 - Jupyter Notebook
 
+## Run the baseline pipeline
+
+The baseline pipeline creates 30-cycle engine windows, removes constant
+columns, uses an engine-wise 80/20 validation split, scales features from
+training engines only, and evaluates Ridge and Random Forest regressors.
+
+```powershell
+.venv\Scripts\python.exe src\baseline_pipeline.py
+```
+
+Generated artifacts:
+
+- `artifacts/standard_scaler.joblib`
+- `artifacts/ridge.joblib`
+- `artifacts/random_forest.joblib`
+- `artifacts/baseline_metadata.json`
+- `reports/baseline_metrics.csv`
+- `reports/ridge_test_predictions.csv`
+- `reports/random_forest_test_predictions.csv`
+
 ## Project Status
 
 🚧 Under Development
