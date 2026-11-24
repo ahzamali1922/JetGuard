@@ -52,7 +52,7 @@ The final deliverable must demonstrate:
 
 ## Phase 2: Dataset Exploration and Classical Baseline
 
-**Status:** Partially completed
+**Status:** Completed
 
 ### 2.1 Dataset loading and exploration
 
@@ -98,7 +98,7 @@ The final deliverable must demonstrate:
 
 ### 2.3 Classical feature engineering
 
-**Status:** Planned
+**Status:** Completed
 
 - Create an engine-wise split for training and validation.
 - Do not allow windows or records from the same engine to appear in both
@@ -111,10 +111,23 @@ The final deliverable must demonstrate:
 - Define a final test-window strategy consistent with FD001:
   use each test engine's final observed sequence or the available window
   near the end of its trajectory.
+- Added 5-, 10-, and 30-cycle rolling mean and rolling standard-deviation
+  features.
+- Added 1-, 5-, and 10-cycle lag features.
+- Created an engine-wise 80/20 training-validation split.
+- Fitted feature scaling using training engines only.
+
+**Artifacts:**
+
+- `notebooks/03_feature_engineering.ipynb`
+- `data/processed/train_FD001_features.csv`
+- `data/processed/validation_FD001_features.csv`
+- `data/processed/test_FD001_features.csv`
+- `data/processed/feature_metadata.json`
 
 ### 2.4 Classical baseline models
 
-**Status:** Planned
+**Status:** Completed
 
 - Linear/Ridge or Lasso regression
 - Random Forest Regressor
@@ -124,9 +137,21 @@ The final deliverable must demonstrate:
 All baseline candidates must use an engine-wise split and be evaluated with
 the same features, RUL target, test policy, and random seeds.
 
+**Implemented models:**
+
+- Ridge Regression
+- Random Forest Regressor
+
+**Artifacts:**
+
+- `notebooks/04_baseline_models.ipynb`
+- `artifacts/ridge.joblib`
+- `artifacts/random_forest.joblib`
+- `artifacts/baseline_metadata.json`
+
 ### 2.5 Baseline evaluation
 
-**Status:** Planned
+**Status:** Completed
 
 Use the following primary metrics:
 
@@ -137,6 +162,30 @@ Use the following primary metrics:
 
 Save metrics and predictions in machine-readable files so that results can
 be reproduced and compared with advanced models.
+
+**Test results:**
+
+| Model | RMSE | MAE | MAPE | NASA score |
+|---|---:|---:|---:|---:|
+| Ridge Regression | 16.51 | 13.35 | 0.302 | 420.71 |
+| Random Forest | 18.38 | 13.24 | 0.205 | 831.57 |
+
+**Baseline interpretation:**
+
+- Ridge performed better on RMSE and the asymmetric NASA score.
+- Random Forest performed better on MAE and MAPE.
+- The difference is small enough that neither model should be discarded
+  before advanced-model and error-pattern comparisons.
+
+**Model usage decision:**
+
+- Use **both baselines** in the final comparative analysis.
+- Keep Ridge as the simple, interpretable reference model.
+- Keep Random Forest as the nonlinear classical benchmark and a useful
+  fallback model.
+- Do not choose an advanced model based only on test-set performance.
+- The final recommended model will be selected after Phase 3 using consistent
+  validation, test, NASA score, error-pattern, and complexity comparisons.
 
 **Phase 2 acceptance checks:**
 
@@ -150,14 +199,14 @@ be reproduced and compared with advanced models.
 
 ## Phase 3: Advanced Modeling and Final Evaluation
 
-**Status:** Planned
+**Status:** In progress
 
 This is the final implementation and evaluation phase. It must extend beyond
 classical regression and include at least one advanced model.
 
 ### 3.1 Advanced model selection
 
-**Status:** Planned
+**Status:** Next step
 
 Select at least one of the following models:
 
@@ -174,12 +223,19 @@ Recommended primary choice:
 - **LSTM or GRU** for direct multivariate sequence modeling
 - **XGBoost** as an optional advanced tabular comparison
 
+The two trained classical baselines should remain in the comparison:
+
+- Ridge is the linear reference and is currently strongest on test RMSE and
+  NASA score.
+- Random Forest is the nonlinear classical benchmark and is currently
+  strongest on test MAE and MAPE.
+
 The final model choice must be justified using dataset length, multivariate
 structure, sequence dependence, training cost, and interpretability.
 
 ### 3.2 Sequence preparation
 
-**Status:** Planned
+**Status:** Next step
 
 - Generate sliding windows with configurable lengths, beginning with 30
   cycles.
