@@ -267,7 +267,7 @@ structure, sequence dependence, training cost, and interpretability.
 
 ### 3.3 Advanced training
 
-**Status:** Initial LSTM training completed; further tuning planned
+**Status:** Initial LSTM training and focused hyperparameter tuning completed
 
 - Implement one or more advanced models with a reproducible training script.
 - Use a fixed random seed.
@@ -286,6 +286,30 @@ structure, sequence dependence, training cost, and interpretability.
 - Train an LSTM with 64 hidden units and compare the four lookback lengths.
 - Use early stopping with a maximum of 80 epochs and patience of 8.
 - Save candidate checkpoints and the selected 50-cycle model.
+- Run a one-factor-at-a-time validation search for hidden size, dropout,
+  learning rate, and batch size while holding the selected 50-cycle window
+  constant.
+- Select configurations using validation NASA score; do not use test results
+  for tuning.
+
+The existing baseline LSTM configuration (64 hidden units, no dropout,
+learning rate 0.001, batch size 256) had the lowest validation NASA score
+(6,240.98). The tested alternatives did not improve the selected objective.
+The selected configuration's official test results remain RMSE 16.86,
+MAE 12.68, MAPE 0.181, and NASA score 407.60.
+
+This is a focused, limited search, not an exhaustive hyperparameter
+optimization.
+
+**Tuning artifacts:**
+
+- `notebooks/08_lstm_hyperparameter_tuning.ipynb`
+- `reports/lstm_hyperparameter_validation.csv`
+- `reports/lstm_tuned_test_metrics.csv`
+- `reports/lstm_tuned_test_predictions.csv`
+- `artifacts/lstm_tuned_selected.pth`
+- `artifacts/lstm_tuned_standard_scaler.joblib`
+- `artifacts/lstm_tuning_metadata.json`
 
 **Artifacts:**
 
@@ -298,7 +322,7 @@ structure, sequence dependence, training cost, and interpretability.
 
 ### 3.4 Comparative analysis
 
-**Status:** In progress
+**Status:** In progress - five-fold engine-grouped validation completed
 
 Compare the advanced model with classical Phase 2 baselines under the same
 protocol:
@@ -325,10 +349,30 @@ The LSTM currently has the best test MAE, MAPE, and NASA score. Ridge has
 the best RMSE. Retain all three models in the comparison; do not claim one
 final winner until error analysis and further validation are complete.
 
+Five-fold `GroupKFold` validation was run on the 100 FD001 training engines.
+Each fold holds out complete engines, fits scaling on that fold's training
+engines, and evaluates all models on matching prediction cycles from cycle 50
+onward.
+
+| Model | CV RMSE (mean +/- std) | CV MAE (mean +/- std) | CV MAPE (mean +/- std) | CV NASA score (mean +/- std) |
+|---|---:|---:|---:|---:|
+| LSTM (50-cycle) | 13.46 +/- 1.02 | 10.20 +/- 0.86 | 0.170 +/- 0.013 | 9,683 +/- 1,885 |
+| Ridge Regression | 17.16 +/- 1.13 | 13.71 +/- 1.03 | 0.307 +/- 0.024 | 15,331 +/- 3,317 |
+| Random Forest | 17.99 +/- 0.61 | 13.28 +/- 0.75 | 0.230 +/- 0.017 | 23,516 +/- 4,382 |
+
+Across these training-only folds, the LSTM has the best average scores on all
+four reported metrics. Fold CV predicts multiple time points per held-out
+engine, unlike the official test evaluation, which predicts one final point
+per engine; treat their absolute scores as different evaluation settings.
+The official test results remain the final held-out benchmark.
+
 **Artifacts:**
 
 - `reports/lstm_test_metrics.csv`
 - `reports/lstm_test_predictions.csv`
+- `reports/group_cv_tabular_fold_metrics.csv`
+- `reports/group_cv_lstm_fold_metrics.csv`
+- `reports/group_cv_summary.csv`
 - `notebooks/06_error_analysis.ipynb`
 - `reports/error_analysis_overall_metrics.csv`
 - `reports/error_analysis_by_life_stage.csv`
@@ -361,7 +405,7 @@ For every model, explain:
 
 ### 3.5 Interpretation and insights
 
-**Status:** In progress
+**Status:** In progress - initial sensor and error analyses completed
 
 - Identify trends and anomalies associated with decreasing RUL.
 - Relate findings to sensor degradation behavior.
@@ -373,10 +417,25 @@ For every model, explain:
   inspection planning.
 - Inspect per-engine and life-stage errors with
   `notebooks/06_error_analysis.ipynb`.
+- Run five-fold engine-wise sensor/RUL correlation and compare standardized
+  sensor profiles across exploratory RUL bands with
+  `notebooks/07_robust_validation_and_sensor_insights.ipynb`.
+
+Initial sensor analysis found the strongest median absolute within-engine
+Spearman relationships for `sensor_11`, `sensor_12`, `sensor_4`, `sensor_7`,
+and `sensor_8`. The direction was consistent across the 100 training engines
+for those five channels. These results identify associations to investigate;
+they do not establish fault causality.
+
+**Artifacts:**
+
+- `reports/sensor_rul_correlation_by_engine.csv`
+- `reports/sensor_median_profile_by_life_stage.csv`
+- `reports/sensor_trends_by_life_stage.png`
 
 ### 3.6 Limitations and improvements
 
-**Status:** Planned
+**Status:** In progress - initial limitations documented
 
 Clearly document:
 
@@ -397,6 +456,10 @@ Propose prioritized improvements:
 - Compare recurrent, convolutional, and boosting approaches
 - Add model explainability
 - Consider a backend API and monitoring dashboard
+
+The initial limitations and follow-up recommendations are documented in
+`notebooks/07_robust_validation_and_sensor_insights.ipynb`; consolidate them
+into the final report after additional validation.
 
 ---
 
@@ -439,14 +502,14 @@ The report must include:
 
 ## Phase 3 Completion Checklist
 
-- [ ] At least one advanced model is implemented
-- [ ] Basic hyperparameter tuning is performed
-- [ ] Training and validation are engine-wise and leakage-free
-- [ ] Classical and advanced models are compared on consistent metrics
-- [ ] RMSE, MAE, MAPE, and NASA score are reported
-- [ ] At least one 20-, 30-, 50-, or 60-cycle window experiment is completed
-- [ ] Results are compared across engine lifetimes and error ranges
-- [ ] Meaningful insights are derived from the experiments
-- [ ] Limitations and future improvements are documented
+- [x] At least one advanced model is implemented
+- [x] Basic hyperparameter tuning is performed
+- [x] Training and validation are engine-wise and leakage-free
+- [x] Classical and advanced models are compared on consistent metrics
+- [x] RMSE, MAE, MAPE, and NASA score are reported
+- [x] At least one 20-, 30-, 50-, or 60-cycle window experiment is completed
+- [x] Results are compared across engine lifetimes and error ranges
+- [x] Meaningful initial insights are derived from the experiments
+- [x] Initial limitations and future improvements are documented
 - [ ] Code and reports are complete, reproducible, and clearly structured
 - [ ] Equal participation of team members is demonstrated
