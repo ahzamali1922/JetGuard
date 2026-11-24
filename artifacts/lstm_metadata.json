@@ -1,0 +1,43 @@
+{
+  "seed": 42,
+  "device": "cpu",
+  "input_features": [
+    "setting_1",
+    "setting_2",
+    "setting_3",
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_6",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "window_lengths_tested": [
+    20,
+    30,
+    50,
+    60
+  ],
+  "selected_window_length": 50,
+  "selection_metric": "validation NASA_score (lower is better)",
+  "hidden_size": 64,
+  "batch_size": 256,
+  "max_epochs": 80,
+  "patience": 8,
+  "target": "RUL_capped for train/validation; official RUL for test",
+  "test_metrics": {
+    "RMSE": 16.860205826956673,
+    "MAE": 12.675820350646973,
+    "MAPE": 0.1807665228843689,
+    "NASA_score": 407.59576416015625
+  }
+}

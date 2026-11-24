@@ -206,7 +206,7 @@ classical regression and include at least one advanced model.
 
 ### 3.1 Advanced model selection
 
-**Status:** Next step
+**Status:** Completed - LSTM selected for the first advanced experiment
 
 Select at least one of the following models:
 
@@ -223,6 +223,13 @@ Recommended primary choice:
 - **LSTM or GRU** for direct multivariate sequence modeling
 - **XGBoost** as an optional advanced tabular comparison
 
+The first advanced experiment uses an LSTM because FD001 provides
+multivariate sensor trajectories and the project specifically needs a
+sequence-learning model. PyTorch is declared in `requirements.txt`.
+
+The initial LSTM experiment selected a 50-cycle lookback using validation
+NASA score. Window lengths of 20, 30, 50, and 60 cycles were tested.
+
 The two trained classical baselines should remain in the comparison:
 
 - Ridge is the linear reference and is currently strongest on test RMSE and
@@ -235,7 +242,7 @@ structure, sequence dependence, training cost, and interpretability.
 
 ### 3.2 Sequence preparation
 
-**Status:** Next step
+**Status:** Completed for the initial LSTM experiment
 
 - Generate sliding windows with configurable lengths, beginning with 30
   cycles.
@@ -247,10 +254,20 @@ structure, sequence dependence, training cost, and interpretability.
 - Define a consistent policy for test engines shorter than the selected
   window.
 - Record the exact features, window length, padding policy, and target cap.
+- Fit a StandardScaler only on observations from training engines.
+- Use the official `RUL_FD001.txt` values for final test-engine targets.
+- Left-pad a test trajectory if it is shorter than the selected window.
+- Use the existing engine-wise training/validation split from Phase 2.
+
+**Artifacts:**
+
+- `notebooks/05_lstm_model.ipynb`
+- `artifacts/lstm_standard_scaler.joblib`
+- `reports/lstm_validation_window_comparison.csv`
 
 ### 3.3 Advanced training
 
-**Status:** Planned
+**Status:** Initial LSTM training completed; further tuning planned
 
 - Implement one or more advanced models with a reproducible training script.
 - Use a fixed random seed.
@@ -264,10 +281,24 @@ structure, sequence dependence, training cost, and interpretability.
   - dropout or regularization
   - batch size for recurrent models
 - Avoid model-selection decisions based on test-set performance.
+- Train LSTM candidates with early stopping and select window length using
+  validation results only.
+- Train an LSTM with 64 hidden units and compare the four lookback lengths.
+- Use early stopping with a maximum of 80 epochs and patience of 8.
+- Save candidate checkpoints and the selected 50-cycle model.
+
+**Artifacts:**
+
+- `artifacts/lstm_window_20.pth`
+- `artifacts/lstm_window_30.pth`
+- `artifacts/lstm_window_50.pth`
+- `artifacts/lstm_window_60.pth`
+- `artifacts/lstm_selected.pth`
+- `artifacts/lstm_metadata.json`
 
 ### 3.4 Comparative analysis
 
-**Status:** Planned
+**Status:** In progress
 
 Compare the advanced model with classical Phase 2 baselines under the same
 protocol:
@@ -282,6 +313,44 @@ protocol:
 - NASA score
 - training and inference time
 
+**Current FD001 test comparison:**
+
+| Model | RMSE | MAE | MAPE | NASA score |
+|---|---:|---:|---:|---:|
+| Ridge Regression | 16.51 | 13.35 | 0.302 | 420.71 |
+| Random Forest | 18.38 | 13.24 | 0.205 | 831.57 |
+| LSTM (50-cycle window) | 16.86 | 12.68 | 0.181 | 407.60 |
+
+The LSTM currently has the best test MAE, MAPE, and NASA score. Ridge has
+the best RMSE. Retain all three models in the comparison; do not claim one
+final winner until error analysis and further validation are complete.
+
+**Artifacts:**
+
+- `reports/lstm_test_metrics.csv`
+- `reports/lstm_test_predictions.csv`
+- `notebooks/06_error_analysis.ipynb`
+- `reports/error_analysis_overall_metrics.csv`
+- `reports/error_analysis_by_life_stage.csv`
+- `reports/error_analysis_per_engine.csv`
+- `reports/error_analysis_worst_engines.csv`
+- `reports/error_analysis_plots.png`
+
+### Initial error-analysis findings
+
+- The LSTM has the lowest aggregate test MAE (12.68), MAPE (0.181), and
+  NASA score (407.60); Ridge has the lowest RMSE (16.51).
+- In exploratory test RUL bands (0-30, 31-75, and above 75 cycles), the LSTM
+  has the lowest MAE in the late and middle bands.
+- Ridge has the lowest MAE in the early-life band (>75 RUL): 13.41 versus
+  15.43 for Random Forest and 17.12 for the LSTM.
+- The LSTM's overall RUL overestimate rate is 45%, compared with 52% for Ridge
+  and 60% for Random Forest. The asymmetric NASA score additionally accounts
+  for over- and under-prediction magnitude.
+- The life-stage cutoffs are descriptive bins for this analysis, not
+  maintenance decision thresholds. These test-set observations are for
+  interpretation and are not used to retune the models.
+
 For every model, explain:
 
 - Which model performs better
@@ -292,7 +361,7 @@ For every model, explain:
 
 ### 3.5 Interpretation and insights
 
-**Status:** Planned
+**Status:** In progress
 
 - Identify trends and anomalies associated with decreasing RUL.
 - Relate findings to sensor degradation behavior.
@@ -302,6 +371,8 @@ For every model, explain:
   correlation alone.
 - Explain how the model could support maintenance prioritization or
   inspection planning.
+- Inspect per-engine and life-stage errors with
+  `notebooks/06_error_analysis.ipynb`.
 
 ### 3.6 Limitations and improvements
 

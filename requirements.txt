@@ -6,6 +6,7 @@ scipy>=1.13,<2.0
 
 # Machine Learning
 scikit-learn>=1.5,<2.0
+torch>=2.4,<3.0
 
 # Data Visualization
 matplotlib>=3.9,<4.0
